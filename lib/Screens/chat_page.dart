@@ -23,7 +23,7 @@ class _UserChatPageState extends State<UserChatPage> {
 
   String? email;
 
- Future<String?> shared() async {
+  Future<String?> shared() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     email = preferences.getString('email');
     return email;
@@ -33,9 +33,16 @@ class _UserChatPageState extends State<UserChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: Icon(Icons.person),
         centerTitle: true,
         backgroundColor: Colors.purple,
-        title: Text('User Chat section'),
+        title: FutureBuilder(
+          future: shared(),
+          builder: ((context, snapshot) {
+            return Text('${email}');
+          }),
+          // child: Text(email),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -96,7 +103,10 @@ class _UserChatPageState extends State<UserChatPage> {
                                       : MainAxisAlignment.start,
                                   children: [
                                     Bubble(
-                                      nip: BubbleNip.rightTop,
+                                      // nip: BubbleNip.rightTop,
+                                      nip: user == email
+                                          ? BubbleNip.rightTop
+                                          : BubbleNip.leftTop,
                                       color: Color.fromRGBO(225, 255, 199, 1.0),
                                       child: Text(
                                         '${sec[index].data()['massage']}'
@@ -106,7 +116,7 @@ class _UserChatPageState extends State<UserChatPage> {
                                           // color: Colors.black,
                                           fontSize: 20,
                                           // backgroundColor:
-                                              // Color.fromARGB(255, 103, 101, 101),
+                                          // Color.fromARGB(255, 103, 101, 101),
                                         ),
                                       ),
                                     ),
