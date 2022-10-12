@@ -1,15 +1,17 @@
 // ignore_for_file: prefer_const_constructors
 
-
+// import 'dart:html';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebse_login/Widgets/circleAvatharIcon.dart';
 import 'package:firebse_login/Widgets/container.dart';
 import 'package:firebse_login/Widgets/icon.dart';
 import 'package:firebse_login/Widgets/text.dart';
+import 'package:firebse_login/constants/constant.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -24,25 +26,37 @@ class _SignUpPageState extends State<SignUpPage> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  signFunction({required email, required password}) {
-    FirebaseAuth.instance
+  signFunction({required email, required password}) async {
+    UserCredential user = await FirebaseAuth.instance
         .createUserWithEmailAndPassword(email: email, password: password);
+    user.user!.uid;
   }
 
-  loginFunction({required email, required password}) {
-    FirebaseAuth.instance
+  loginFunction({required email, required password}) async {
+    UserCredential user = await FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email, password: password);
+    user.user!.uid;
   }
 
-  signInWithGoogle() async {
+  Future<UserCredential> signInWithGoogle() async {
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    Constant.email = googleUser?.email;
     GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
     final credential = GoogleAuthProvider.credential(
       accessToken: googleAuth?.accessToken,
       idToken: googleAuth?.idToken,
     );
-    await FirebaseAuth.instance.signInWithCredential(credential);
+    UserCredential user =
+        await FirebaseAuth.instance.signInWithCredential(credential);
+    final pref = await SharedPreferences.getInstance();
+    pref.setString('email', user.user!.email??'no email');
+    print(user.user!.email);
+    return user;
   }
+  // Future saveToSharedPreferances() async{
+  //   preferences.setString('user', googleUser?.email);
+  // }
 
   // signInWithFacebook() async {
   //   LoginResult loginResult = await FacebookAuth.instance.login();
@@ -185,8 +199,12 @@ class _SignUpPageState extends State<SignUpPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       signInWithGoogle();
+                      print('!!!!!!!!!!!!!!!!!');
+
+                      // final pref = await SharedPreferences.getInstance();
+                      // pref.setString('email', userCredential.user!.email!);
                     },
                     child: CircleImage(
                       assetImage: 'assets/logo/google.png',

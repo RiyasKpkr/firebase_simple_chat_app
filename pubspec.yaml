@@ -40,6 +40,8 @@ dependencies:
   firebase_core: ^1.24.0
   google_sign_in: ^5.4.2
   cloud_firestore: ^3.5.1
+  shared_preferences: ^2.0.15
+  bubble: ^1.2.1
 
 
 dev_dependencies:
