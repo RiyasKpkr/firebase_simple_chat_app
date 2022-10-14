@@ -51,6 +51,7 @@ class _SignUpPageState extends State<SignUpPage> {
         await FirebaseAuth.instance.signInWithCredential(credential);
     final pref = await SharedPreferences.getInstance();
     pref.setString('email', user.user!.email??'no email');
+    pref.setString('photoUrl',user.user!.photoURL??'Noimage');
     print(user.user!.email);
     return user;
   }

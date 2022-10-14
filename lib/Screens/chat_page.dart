@@ -22,10 +22,12 @@ class _UserChatPageState extends State<UserChatPage> {
   TextEditingController messageController = TextEditingController();
 
   String? email;
+  String? photoUrl;
 
   Future<String?> shared() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     email = preferences.getString('email');
+    photoUrl = preferences.getString('photoUrl');
     return email;
   }
 
@@ -33,7 +35,22 @@ class _UserChatPageState extends State<UserChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.person),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: FutureBuilder(
+            future: shared(),
+            builder: (context,snapshot) {
+              return CircleAvatar(
+                radius: 25,
+                backgroundColor: Colors.white,
+                foregroundImage: NetworkImage(photoUrl!),
+                // radius: 25,
+                // child: photoUrl==null?Image.network(photoUrl!):Icon(Icons.person),
+                // child: Icon(Icons.person),
+              );
+            }
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.purple,
         title: FutureBuilder(
