@@ -3,8 +3,6 @@
 import 'package:bubble/bubble.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:firebase_core/firebase_core.dart';
-// import 'package:firebse_login/constants/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -140,7 +138,7 @@ class _UserChatPageState extends State<UserChatPage> {
                                   ],
                                 );
                               } else {
-                                return Text('no data');
+                                return Text('null');
                               }
                             },
                             separatorBuilder: (context, index) {
@@ -151,7 +149,7 @@ class _UserChatPageState extends State<UserChatPage> {
                             itemCount: snapshot.data!.docs.length,
                           );
                         } else {
-                          return Text('data');
+                          return Text('  ');
                         }
                       }),
                 ),
