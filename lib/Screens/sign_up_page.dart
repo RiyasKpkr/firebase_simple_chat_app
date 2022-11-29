@@ -2,7 +2,9 @@
 
 // import 'dart:html';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebse_login/Screens/user_list_page.dart';
 import 'package:firebse_login/Widgets/circleAvatharIcon.dart';
 import 'package:firebse_login/Widgets/container.dart';
 import 'package:firebse_login/Widgets/icon.dart';
@@ -11,7 +13,6 @@ import 'package:firebse_login/constants/constant.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -25,46 +26,102 @@ class _SignUpPageState extends State<SignUpPage> {
 
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController userNamecontroller = TextEditingController();
 
   signFunction({required email, required password}) async {
     UserCredential user = await FirebaseAuth.instance
-        .createUserWithEmailAndPassword(email: email, password: password);
+        .createUserWithEmailAndPassword(email: email, password: password)
+        .then((value) {
+      Constant.email = value.user!.email;
+      Constant.photoURL =
+          'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.pngitem.com%2Fpimgs%2Fm%2F78-786293_1240-x-1240-0-avatar-profile-icon-png.png&f=1&nofb=1&ipt=68be7f187c7dda5acf6dc98313833971b645a4921c3c0c26d4c6660d19d93773&ipo=images';
+      Constant.uid = value.user!.uid;
+      Constant.username = userNamecontroller.text;
+
+      FirebaseFirestore.instance.collection('UsersData').add({
+        'Username': Constant.username,
+        'email': Constant.email,
+        'uid': Constant.uid,
+        'PhotoUrl': Constant.photoURL,
+      });
+      Navigator.pushReplacement(context, MaterialPageRoute(
+        builder: (context) {
+          return UserListPage();
+        },
+      ));
+      return value;
+    });
+
     user.user!.uid;
   }
 
   loginFunction({required email, required password}) async {
     UserCredential user = await FirebaseAuth.instance
-        .signInWithEmailAndPassword(email: email, password: password);
+        .signInWithEmailAndPassword(email: email, password: password)
+        .then((value) {
+          Constant.email = value.user!.email;
+          Constant.uid = value.user!.uid;
+      Navigator.pushReplacement(context, MaterialPageRoute(
+        builder: (context) {
+          return UserListPage();
+        },
+      ));
+      return value;
+    });
+
     user.user!.uid;
   }
 
   Future<UserCredential> signInWithGoogle() async {
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-    Constant.email = googleUser?.email;
+    // Constant.email = googleUser?.email;
     GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
     final credential = GoogleAuthProvider.credential(
       accessToken: googleAuth?.accessToken,
       idToken: googleAuth?.idToken,
     );
-    UserCredential user =
-        await FirebaseAuth.instance.signInWithCredential(credential);
-    final pref = await SharedPreferences.getInstance();
-    pref.setString('email', user.user!.email??'no email');
-    pref.setString('photoUrl',user.user!.photoURL??'Noimage');
-    print(user.user!.email);
-    return user;
-  }
-  // Future saveToSharedPreferances() async{
-  //   preferences.setString('user', googleUser?.email);
-  // }
 
-  // signInWithFacebook() async {
-  //   LoginResult loginResult = await FacebookAuth.instance.login();
-  //   OAuthCredential FacebookAuthCredential =
-  //       FacebookAuthProvider.credential(loginResult.accessToken!.token);
-  //   FirebaseAuth.instance.signInWithCredential(FacebookAuthCredential);
-  // }
+    UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithCredential(credential).then(
+      (value) async {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return UserListPage();
+            },
+          ),
+        );
+        return value;
+      },
+    );
+
+    Constant.email = userCredential.user!.email;
+    Constant.photoURL = userCredential.user!.photoURL;
+    Constant.uid = userCredential.user!.uid;
+    Constant.username = userCredential.user!.displayName;
+
+    var firebaseCollection =
+        await FirebaseFirestore.instance.collection('UsersData').get();
+    var usersList = firebaseCollection.docs;
+    print(usersList);
+    bool newUser = true;
+    for (int i = 0; i < usersList.length; i++) {
+      print(usersList[i]['email']);
+      if (Constant.email == usersList[i]['email']) {
+        newUser = false;
+      }
+    }
+    if (newUser == true) {
+      FirebaseFirestore.instance.collection('UsersData').add({
+        'email': Constant.email,
+        'PhotoUrl': Constant.photoURL,
+        'uid': Constant.uid,
+        'Username': Constant.username,
+      });
+    }
+    return userCredential;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -258,10 +315,29 @@ class _SignUpPageState extends State<SignUpPage> {
                 fontSize: 14,
                 // fontWeight: FontWeight.bold,
               ),
+              // Text(widget.uNmae),
               SizedBox(
                 height: 27,
               ),
               //email textfield
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: ContainerWidget(
+                  obscureText: false,
+                  passwordController: userNamecontroller,
+                  containerColor: Color.fromARGB(255, 245, 242, 242),
+                  containerBorder: Border.all(color: Colors.white),
+                  containerRadius: BorderRadius.circular(12),
+                  inputBorder: InputBorder.none,
+                  hintText: 'User name',
+                  icon: Icons.person,
+                  iconColor: Colors.grey,
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              //userName
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: ContainerWidget(
@@ -279,7 +355,6 @@ class _SignUpPageState extends State<SignUpPage> {
               SizedBox(
                 height: 10,
               ),
-
               //password textfield
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),
