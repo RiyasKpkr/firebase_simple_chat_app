@@ -76,14 +76,14 @@ class _UserChatPageState extends State<UserChatPage> {
                         List chatList = new List.from(userChat)
                           ..addAll(oppositeUserChat);
                         chatList.sort(
-                          (a, b) {
+                          (b, a) {
                             var _first = DateTime.parse(a.data()['Time']);
                             var _second = DateTime.parse(b.data()['Time']);
                             return _first.compareTo(_second);
                           },
                         );
                         return ListView.separated(
-                          // reverse: true,
+                          reverse: true,
                           separatorBuilder: (context, index) {
                             return SizedBox(
                               height: 5,
@@ -171,6 +171,7 @@ class _UserChatPageState extends State<UserChatPage> {
                           setState(() {
                             chat.add(messageController.text);
                             messageController.text = '';
+                            FocusScope.of(context).requestFocus(FocusNode());
                           });
                         },
                         child: Icon(

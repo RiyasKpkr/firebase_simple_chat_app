@@ -99,6 +99,7 @@ class _UserListPageState extends State<UserListPage> {
                 '>>>>>>>>>>$userList',
               );
               return ListView.builder(
+                shrinkWrap: true,
                 itemCount: userList.length,
                 itemBuilder: (context, index) {
                   if (Constant.uid != userList[index]['uid']) {
@@ -113,13 +114,15 @@ class _UserListPageState extends State<UserListPage> {
                           ),
                         ),
                       ),
-                      child: ListTile(
-                        title: Text(
-                          userList[index]['Username'],
-                        ),
-                        leading: CircleAvatar(
-                          foregroundImage: NetworkImage(
-                            userList[index]['PhotoUrl'],
+                      child: Card(
+                        child: ListTile(
+                          title: Text(
+                            userList[index]['Username'],
+                          ),
+                          leading: CircleAvatar(
+                            foregroundImage: NetworkImage(
+                              userList[index]['PhotoUrl'],
+                            ),
                           ),
                         ),
                       ),
