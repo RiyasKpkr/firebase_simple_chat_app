@@ -2,10 +2,12 @@
 
 // import 'dart:html';
 
-import 'dart:html';
+import 'dart:developer';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebse_login/Screens/user_list_page.dart';
 import 'package:firebse_login/Widgets/circleAvatharIcon.dart';
 import 'package:firebse_login/Widgets/container.dart';
@@ -33,44 +35,63 @@ class _SignUpPageState extends State<SignUpPage> {
   TextEditingController userNamecontroller = TextEditingController();
 
   signFunction({required email, required password}) async {
-    try {
-      UserCredential user = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password)
-          .then((value) {
-        Constant.email = value.user!.email;
-        Constant.photoURL =
-            'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.pngitem.com%2Fpimgs%2Fm%2F78-786293_1240-x-1240-0-avatar-profile-icon-png.png&f=1&nofb=1&ipt=68be7f187c7dda5acf6dc98313833971b645a4921c3c0c26d4c6660d19d93773&ipo=images';
-        Constant.uid = value.user!.uid;
-        Constant.username = userNamecontroller.text;
+    //prifile iamge upload
 
-        FirebaseFirestore.instance.collection('UsersData').add({
-          'Username': Constant.username,
-          'email': Constant.email,
-          'uid': Constant.uid,
-          'PhotoUrl': Constant.photoURL,
+    final storageRef = FirebaseStorage.instance.ref();
+    final imageName = DateTime.now().millisecondsSinceEpoch.toString();
+    final imagesRef = storageRef.child(imageName);
+    if (imageFile != null) {
+      try {
+        await imagesRef.putFile(imageFile!);
+        String downloadUrl = await imagesRef.getDownloadURL();
+
+        UserCredential user = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: email, password: password)
+            .then((value) {
+          Constant.email = value.user!.email;
+          Constant.photoURL = downloadUrl;
+          Constant.uid = value.user!.uid;
+          Constant.username = userNamecontroller.text;
+
+          FirebaseFirestore.instance.collection('UsersData').add({
+            'Username': Constant.username,
+            'email': Constant.email,
+            'uid': Constant.uid,
+            'PhotoUrl': Constant.photoURL,
+          });
+          Navigator.pushReplacement(context, MaterialPageRoute(
+            builder: (context) {
+              return UserListPage();
+            },
+          ));
+          return value;
         });
-        Navigator.pushReplacement(context, MaterialPageRoute(
-          builder: (context) {
-            return UserListPage();
-          },
-        ));
-        return value;
-      });
-      user.user!.uid;
-    } catch (e) {
-      print(e.toString());
-      String errors = e.toString();
-      List<String> removeString = errors.split(' ');
-      String error = removeString.sublist(1, removeString.length).join(' ');
-      print(error);
+        user.user!.uid;
+      } catch (e) {
+        print(e.toString());
+        String errors = e.toString();
+        List<String> removeString = errors.split(' ');
+        String error = removeString.sublist(1, removeString.length).join(' ');
+        print(error);
 
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: Duration(milliseconds: 2000),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+            content: Text(
+              error.toString(),
+            ),
+          ),
+        );
+      }
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
+          duration: Duration(milliseconds: 3000),
           backgroundColor: Colors.red,
-          content: Text(
-            error.toString(),
-          ),
+          content: Text('upload Profile Image'),
         ),
       );
     }
@@ -365,6 +386,37 @@ class _SignUpPageState extends State<SignUpPage> {
                       builder: (context) {
                         return AlertDialog(
                           title: Text('Please choose'),
+                          actions: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    log('camera');
+                                    final XFile? image = await _imagePicker
+                                        .pickImage(source: ImageSource.camera);
+                                    Navigator.pop(context);
+                                    if (image != null) {
+                                      imageFile = File(image.path);
+                                    }
+                                  },
+                                  child: Text('Camera'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    log('Gallery');
+                                    final XFile? image = await _imagePicker
+                                        .pickImage(source: ImageSource.gallery);
+                                    Navigator.pop(context);
+                                    if (image != null) {
+                                      imageFile = File(image.path);
+                                    }
+                                  },
+                                  child: Text('Gallery'),
+                                ),
+                              ],
+                            )
+                          ],
                         );
                       },
                     );
@@ -373,10 +425,12 @@ class _SignUpPageState extends State<SignUpPage> {
                   child: CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.purple,
-                    foregroundImage:
-                        NetworkImage(
-                            'https://static.vecteezy.com/system/resources/previews/000/366/953/original/edit-profile-vector-icon.jpg'),
-                        // : FileImage(imageFile!) as ImageProvider,
+                    backgroundImage: imageFile == null
+                        ? NetworkImage(
+                                'https://static.vecteezy.com/system/resources/previews/000/366/953/original/edit-profile-vector-icon.jpg')
+                            as ImageProvider
+                        : FileImage(imageFile!),
+                    // : FileImage(imageFile!) as ImageProvider,
                   ),
                 ),
                 SizedBox(
@@ -451,6 +505,8 @@ class _SignUpPageState extends State<SignUpPage> {
                           signFunction(
                               email: emailController.text,
                               password: passwordController.text);
+                          //uploade profile image
+
                           FocusScope.of(context).requestFocus(FocusNode());
                         },
                         child: textWidget(
