@@ -39,10 +39,10 @@ class _SignUpPageState extends State<SignUpPage> {
 
     final storageRef = FirebaseStorage.instance.ref();
     final imageName = DateTime.now().millisecondsSinceEpoch.toString();
-    final imagesRef = storageRef.child(imageName);
+    final imagesRef = storageRef.child(imageName,);
     if (imageFile != null) {
       try {
-        await imagesRef.putFile(imageFile!);
+        await imagesRef.putFile(imageFile!,);
         String downloadUrl = await imagesRef.getDownloadURL();
 
         UserCredential user = await FirebaseAuth.instance
@@ -394,7 +394,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                   onPressed: () async {
                                     log('camera');
                                     final XFile? image = await _imagePicker
-                                        .pickImage(source: ImageSource.camera);
+                                        .pickImage(source: ImageSource.camera,imageQuality: 50);
                                     Navigator.pop(context);
                                     if (image != null) {
                                       imageFile = File(image.path);
@@ -406,7 +406,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                   onPressed: () async {
                                     log('Gallery');
                                     final XFile? image = await _imagePicker
-                                        .pickImage(source: ImageSource.gallery);
+                                        .pickImage(source: ImageSource.gallery,imageQuality: 50);
                                     Navigator.pop(context);
                                     if (image != null) {
                                       imageFile = File(image.path);
